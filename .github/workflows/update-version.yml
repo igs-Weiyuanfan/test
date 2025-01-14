@@ -29,8 +29,8 @@ jobs:
         patch=${version_parts[2]}
 
         # 根據 PR 標籤決定版本號的更新部分
-        labels=(${{ github.event.pull_request.labels.*.name }})
-        echo "PR Labels: ${labels[@]}"
+        labels=$(jq -r '.pull_request.labels | map(.name) | join(" ")' <<< "${{ toJson(github.event) }}")
+        echo "PR Labels: $labels"
 
         # 初始化標籤變數
         is_major=false
@@ -38,7 +38,8 @@ jobs:
         is_patch=false
 
         # 檢查標籤
-        for label in "${labels[@]}"; do
+        for label in $labels; do
+          echo "$label"
           if [[ "$label" == "major" ]]; then
             is_major=true
           elif [[ "$label" == "minor" ]]; then
@@ -65,12 +66,12 @@ jobs:
         echo "New version: $new_version"
 
         # 設定輸出變數
-        echo "::set-output name=new_version::$new_version"
+        echo "new_version=$new_version" >> $GITHUB_ENV
 
     - name: Update version file
       run: |
         # 更新版本號文件
-        echo "${{ steps.version-bump.outputs.new_version }}" > version.txt
+        echo "${{ env.new_version }}" > version.txt
 
         # 設定 Git 使用者資訊
         git config --global user.name "github-actions[bot]"
@@ -78,7 +79,7 @@ jobs:
 
         # 提交更改
         git add version.txt
-        git commit -m "Bump version to ${{ steps.version-bump.outputs.new_version }}"
+        git commit -m "Bump version to ${{ env.new_version }}"
 
     - name: Pull latest changes
       run: git pull --rebase origin ${{ github.head_ref }}
