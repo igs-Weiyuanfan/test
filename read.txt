@@ -1,1 +1,1 @@
-minorTest3
+majorTest
