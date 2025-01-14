@@ -29,19 +29,22 @@ jobs:
         patch=${version_parts[2]}
 
         # 根據 PR 標籤決定版本號的更新部分
-        labels=$(echo "${{ github.event.pull_request.labels.*.name }}")
-        echo "PR Labels: $labels"
+        labels=(${{ github.event.pull_request.labels.*.name }})
+        echo "PR Labels: ${labels[@]}"
 
         # 初始化標籤變數
         is_major=false
         is_minor=false
+        is_patch=false
 
         # 檢查標籤
-        for label in $labels; do
+        for label in "${labels[@]}"; do
           if [[ "$label" == "major" ]]; then
             is_major=true
           elif [[ "$label" == "minor" ]]; then
             is_minor=true
+          elif [[ "$label" == "patch" ]]; then
+            is_patch=true
           fi
         done
 
@@ -53,7 +56,7 @@ jobs:
         elif [ "$is_minor" = true ]; then
           minor=$((minor + 1))
           patch=0
-        else
+        elif [ "$is_patch" = true ]; then
           patch=$((patch + 1))
         fi
 
