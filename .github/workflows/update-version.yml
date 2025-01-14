@@ -32,11 +32,25 @@ jobs:
         labels=$(echo "${{ github.event.pull_request.labels.*.name }}")
         echo "PR Labels: $labels"
 
-        if [[ "$labels" == *"major"* ]]; then
+        # 初始化標籤變數
+        is_major=false
+        is_minor=false
+
+        # 檢查標籤
+        for label in $labels; do
+          if [[ "$label" == "major" ]]; then
+            is_major=true
+          elif [[ "$label" == "minor" ]]; then
+            is_minor=true
+          fi
+        done
+
+        # 根據標籤更新版本號
+        if [ "$is_major" = true ]; then
           major=$((major + 1))
           minor=0
           patch=0
-        elif [[ "$labels" == *"minor"* ]]; then
+        elif [ "$is_minor" = true ]; then
           minor=$((minor + 1))
           patch=0
         else
