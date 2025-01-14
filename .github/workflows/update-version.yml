@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        ref: main  # 確保檢出的是最新的 main 分支
 
     - name: Determine version bump
       id: version-bump
@@ -60,21 +62,7 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-        # 創建一個新的分支
-        git checkout -b version-update-${{ steps.version-bump.outputs.new_version }}
-
-        # 提交更改
+        # 提交並推送更改
         git add version.txt
         git commit -m "Bump version to ${{ steps.version-bump.outputs.new_version }}"
-
-        # 推送到遠端倉庫
-        git push origin version-update-${{ steps.version-bump.outputs.new_version }}
-
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        branch: version-update-${{ steps.version-bump.outputs.new_version }}
-        title: "Bump version to ${{ steps.version-bump.outputs.new_version }}"
-        body: "This PR bumps the version to ${{ steps.version-bump.outputs.new_version }}."
-        base: main
+        git push origin HEAD:main
