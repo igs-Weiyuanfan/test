@@ -15,6 +15,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Extract PR labels
+      id: extract-labels
+      run: |
+        # 提取 PR 標籤名稱到檔案
+        echo '${{ toJson(github.event.pull_request.labels) }}' > labels.json
+        cat labels.json
+
     - name: Determine version bump
       id: version-bump
       run: |
@@ -28,8 +35,8 @@ jobs:
         minor=${version_parts[1]}
         patch=${version_parts[2]}
 
-        # 根據 PR 標籤決定版本號的更新部分
-        labels=$(jq -r '.pull_request.labels | map(.name) | join(" ")' <<< "${{ toJson(github.event) }}")
+        # 使用 jq 解析 labels.json
+        labels=$(jq -r '.[].name' labels.json)
         echo "PR Labels: $labels"
 
         # 初始化標籤變數
