@@ -1,0 +1,63 @@
+name: Update Version
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Determine version bump
+      id: version-bump
+      run: |
+        # 讀取當前版本號
+        version=$(cat version.txt)
+        echo "Current version: $version"
+
+        # 分割版本號
+        IFS='.' read -r -a version_parts <<< "$version"
+        major=${version_parts[0]}
+        minor=${version_parts[1]}
+        patch=${version_parts[2]}
+
+        # 根據 PR 標籤決定版本號的更新部分
+        labels=$(echo "${{ github.event.pull_request.labels.*.name }}")
+        echo "PR Labels: $labels"
+
+        if [[ "$labels" == *"major"* ]]; then
+          major=$((major + 1))
+          minor=0
+          patch=0
+        elif [[ "$labels" == *"minor"* ]]; then
+          minor=$((minor + 1))
+          patch=0
+        else
+          patch=$((patch + 1))
+        fi
+
+        # 組合新的版本號
+        new_version="$major.$minor.$patch"
+        echo "New version: $new_version"
+
+        # 設定輸出變數
+        echo "::set-output name=new_version::$new_version"
+
+    - name: Update version file
+      run: |
+        # 更新版本號文件
+        echo "${{ steps.version-bump.outputs.new_version }}" > version.txt
+
+        # 設定 Git 使用者資訊
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # 提交並推送更改
+        git add version.txt
+        git commit -m "Bump version to ${{ steps.version-bump.outputs.new_version }}"
+        git push origin HEAD:main
