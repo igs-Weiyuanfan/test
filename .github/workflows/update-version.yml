@@ -2,11 +2,10 @@ name: Update Version
 
 on:
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, reopened]
 
 jobs:
   update-version:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     permissions:
@@ -15,8 +14,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        ref: main  # 確保檢出的是最新的 main 分支
 
     - name: Determine version bump
       id: version-bump
@@ -62,7 +59,12 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-        # 提交並推送更改
+        # 提交更改
         git add version.txt
         git commit -m "Bump version to ${{ steps.version-bump.outputs.new_version }}"
-        git push origin HEAD:main
+
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.head_ref }}
