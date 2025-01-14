@@ -29,8 +29,8 @@ jobs:
         patch=${version_parts[2]}
 
         # 根據 PR 標籤決定版本號的更新部分
-        labels=$(jq -r '.pull_request.labels | map(.name) | join(" ")' <<< "${{ toJson(github.event) }}")
-        echo "PR Labels: $labels"
+        labels=(${{ github.event.pull_request.labels.*.name }})
+        echo "PR Labels: ${labels[@]}"
 
         # 初始化標籤變數
         is_major=false
