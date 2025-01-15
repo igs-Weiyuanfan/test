@@ -77,9 +77,8 @@ jobs:
 
     - name: Update version file
       run: |
-        # 保存原始版本號和新版本號到文件
-        echo "original_version: $version" > version.txt
-        echo "new_version: ${{ env.new_version }}" >> version.txt
+        # 更新版本號文件
+        echo "${{ env.new_version }}" > version.txt
 
         # 設定 Git 使用者資訊
         git config --global user.name "github-actions[bot]"
