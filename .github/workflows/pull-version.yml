@@ -1,0 +1,40 @@
+name: Revert Version on PR Rejection
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  revert-version:
+    if: ${{ github.event.pull_request.merged == false }}  # 確保 PR 被拒絕而不是合併
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # 確保有寫入權限
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Revert version file
+      run: |
+        # 讀取原始版本號
+        original_version=$(grep 'original_version' version.txt | cut -d ' ' -f 2)
+        echo "Original version: $original_version"
+
+        # 更新版本號文件
+        echo "$original_version" > version.txt
+
+        # 設定 Git 使用者資訊
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # 提交更改
+        git add version.txt
+        git commit -m "Revert version to $original_version due to PR rejection"
+
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.head_ref }}
