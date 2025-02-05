@@ -47,11 +47,9 @@ jobs:
         git add version.txt
         git commit -m "Bump version to ${{ env.new_version }}"
 
-    name: Create Pull Request
+    - name: Push changes
       env:
-        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
-        git checkout -b version-update
-        git push origin version-update
-        gh pr create --title "Bump version to ${{ env.new_version }}" --body "Auto-generated PR to update version.txt" --base main --head version-update
-        gh pr merge --auto --squash version-update
+        git remote set-url origin https://$TOKEN@github.com/${{ github.repository }}
+        git push origin main
