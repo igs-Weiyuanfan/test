@@ -1,0 +1,51 @@
+name: Update Version on Main
+
+on:
+  push:
+    branches:
+      - main  # 只有當 main 分支有變更時才執行
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # 確保有權限寫入 repo
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Read current version
+      id: get-version
+      run: |
+        version=$(cat version.txt)
+        echo "Current version: $version"
+
+        IFS='.' read -r -a version_parts <<< "$version"
+        major=${version_parts[0]}
+        minor=${version_parts[1]}
+        patch=${version_parts[2]}
+
+        # 預設為 Patch 更新
+        patch=$((patch + 1))
+
+        # 組合新版本號
+        new_version="$major.$minor.$patch"
+        echo "New version: $new_version"
+
+        # 設定環境變數
+        echo "new_version=$new_version" >> $GITHUB_ENV
+
+    - name: Update version file
+      run: |
+        echo "${{ env.new_version }}" > version.txt
+
+        # 設定 Git 使用者
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # 提交更改
+        git add version.txt
+        git commit -m "Bump version to ${{ env.new_version }}"
+        git push origin main
