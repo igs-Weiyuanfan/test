@@ -47,7 +47,9 @@ jobs:
         git add version.txt
         git commit -m "Bump version to ${{ env.new_version }}"
 
-    - name: Push changes to main
+    - name: Push changes
+      env:
+        TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
-        git remote set-url origin https://igs-Weiyuanfan:${{ secrets.PAT_TOKEN  }}@github.com/igs-Weiyuanfan/test.git
+        git remote set-url origin https://$TOKEN@github.com/${{ github.repository }}
         git push origin main
